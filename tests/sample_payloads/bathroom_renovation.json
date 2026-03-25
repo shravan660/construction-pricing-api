@@ -1,0 +1,70 @@
+{
+  "proposal_id": "test_bathroom_001",
+  "metadata": {
+    "city": "Paris",
+    "region": "Île-de-France",
+    "jobType": "Rénovation salle de bain"
+  },
+  "contractor_margin": 0.20,
+  "tasks": [
+    {
+      "id": 1,
+      "label": "Dépose carrelage existant",
+      "description": "Retrait du carrelage mural et sol existant dans la salle de bain",
+      "category": "Carrelage",
+      "zone": "Salle de bain",
+      "phase": "Prep",
+      "unit": "m2",
+      "quantity": 25,
+      "duration": "1 jour"
+    },
+    {
+      "id": 2,
+      "label": "Pose carrelage sol et mural",
+      "description": "Pose de carrelage au sol et aux murs, y compris découpes et joints",
+      "category": "Carrelage",
+      "zone": "Salle de bain",
+      "phase": "Install",
+      "unit": "m2",
+      "quantity": 25,
+      "duration": "2 jours"
+    },
+    {
+      "id": 3,
+      "label": "Installation douche italienne",
+      "description": "Installation complète d'une douche à l'italienne avec receveur extra-plat",
+      "category": "Plomberie",
+      "zone": "Salle de bain",
+      "phase": "Install",
+      "unit": "unité",
+      "quantity": 1,
+      "duration": "1 jour"
+    }
+  ],
+  "materials": [
+    {
+      "label": "Carrelage sol grès cérame gris 60x60",
+      "unit": "m2",
+      "quantity": 15,
+      "usedIn": [2]
+    },
+    {
+      "label": "Carrelage mural blanc 30x60",
+      "unit": "m2",
+      "quantity": 10,
+      "usedIn": [2]
+    },
+    {
+      "label": "Mortier colle flexible C2",
+      "unit": "sac 25kg",
+      "quantity": 4,
+      "usedIn": [2]
+    },
+    {
+      "label": "Receveur de douche extra-plat 120x80",
+      "unit": "unité",
+      "quantity": 1,
+      "usedIn": [3]
+    }
+  ]
+}

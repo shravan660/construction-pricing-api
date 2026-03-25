@@ -1,0 +1,47 @@
+{
+  "proposal_id": "test_001",
+  "metadata": {
+    "city": "Montpellier",
+    "region": "Occitanie",
+    "jobType": "Water Heater Installation"
+  },
+  "contractor_margin": 0.15,
+  "tasks": [
+    {
+      "id": 1,
+      "label": "Removal of the old water heater",
+      "description": "Safe removal of the existing old water heater, including draining and disconnection of fittings.",
+      "category": "Plomberie",
+      "zone": "Bathroom",
+      "phase": "Prep",
+      "unit": "unit",
+      "quantity": 1,
+      "duration": "2 hours"
+    },
+    {
+      "id": 2,
+      "label": "Installation of the 200L water heater (cumulus)",
+      "description": "Installation of a 200-liter water heater, connection to water and electricity systems, and secure fastening.",
+      "category": "Plomberie",
+      "zone": "Bathroom",
+      "phase": "Install",
+      "unit": "unit",
+      "quantity": 1,
+      "duration": "3 hours"
+    }
+  ],
+  "materials": [
+    {
+      "label": "200L Water Heater (Cumulus)",
+      "unit": "unit",
+      "quantity": 1,
+      "usedIn": [2]
+    },
+    {
+      "label": "Water heater connection kit",
+      "unit": "unit",
+      "quantity": 1,
+      "usedIn": [2]
+    }
+  ]
+}
