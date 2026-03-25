@@ -13,8 +13,9 @@ def semantic_search(
     top_k: int = Query(default=5, ge=1, le=20, description="Number of results to return"),
 ):
     """
-    Raw semantic search over the product catalogue.
-    Useful for debugging, front-end autocomplete, or manual lookups.
+    Raw semantic search endpoint — mainly useful for testing/debugging.
+    Try queries in both French and English to see how well cross-language
+    matching works (e.g. 'water heater' should match 'chauffe-eau').
     """
     hits = search(q, top_k=top_k)
     results = [

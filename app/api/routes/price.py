@@ -49,14 +49,18 @@ def price_proposal(req: ProposalRequest, db: Session = Depends(get_db)):
     meta = req.metadata or {}
 
     # ── 1. Regional modifier ────────────────────────────────────────────────
+    # City takes priority over region (Paris > Île-de-France)
+    # Falls back to 1.0 if we don't recognise the location — better than crashing
     city = getattr(meta, "city", None)
     region = getattr(meta, "region", None)
     regional_mod = get_regional_modifier(city, region)
 
     # ── 2. Price materials ─────────────────────────────────────────────────
+    # We do a quick search first just to get a base price estimate for the
+    # feedback calculation — the real search happens inside price_material()
+    # This is a bit redundant but keeps the feedback logic clean
     priced_materials: list[PricedMaterial] = []
     for mat in req.materials:
-        # Estimate base price first to anchor feedback calculation
         search_result = _quick_search_price(mat.label)
         base_estimate = search_result * mat.quantity * regional_mod if search_result else 0.0
 

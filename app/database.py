@@ -3,7 +3,9 @@ from sqlalchemy.orm import sessionmaker, DeclarativeBase
 from app.config import settings
 
 
-# SQLite: enable WAL mode for better concurrent reads
+# SQLite is fine for this scale — one process, moderate write volume.
+# The check_same_thread=False is needed because FastAPI runs in a threadpool.
+# If we ever switch to Postgres, just change DATABASE_URL and remove connect_args.
 engine = create_engine(
     settings.DATABASE_URL,
     connect_args={"check_same_thread": False} if "sqlite" in settings.DATABASE_URL else {},
@@ -11,7 +13,8 @@ engine = create_engine(
 )
 
 
-# Enable WAL mode for SQLite – improves concurrent read performance
+# WAL mode lets readers and writers work at the same time without blocking each other.
+# foreign_keys=ON is off by default in SQLite — always worth enabling.
 if "sqlite" in settings.DATABASE_URL:
     @event.listens_for(engine, "connect")
     def set_sqlite_pragma(dbapi_connection, _connection_record):
