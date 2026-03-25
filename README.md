@@ -1,74 +1,56 @@
-# Construction Pricing API
+ï»¿#  Construction Pricing API
 
-## Overview
+##  Overview
 
-A REST API that takes a construction proposal (list of materials and tasks) and returns realistic, market-informed price estimates. It matches materials to real French catalog data using semantic search, prices labor tasks using published market rates, and applies regional cost adjustments with a time-decay feedback correction loop.
-
----
-
-## Features
-
-- Semantic search to match free-text material descriptions to BricoDepôt catalog products
-- Multilingual support — handles French and English queries in the same request
-- Price estimation for both materials (catalog-matched) and labor tasks (formula-based)
-- Regional price modifiers for 30+ French cities and regions
-- Contractor feedback loop with time-decay weighting — recent feedback weighs more
-- Persistent pricing logs in SQLite for audit and analytics
-- Interactive API docs at `/docs` out of the box
+A FastAPI-based backend system that estimates construction material and labor pricing using **semantic search**.
+It leverages **FAISS vector indexing** to match free-text queries with real French catalog products, handles multilingual input (French + English), and applies regional cost modifiers with a time-decay feedback loop.
 
 ---
 
-## Tech Stack
+##  Key Features
 
-| Component | Choice |
-|-----------|--------|
-| Language | Python 3.11+ |
-| Framework | FastAPI |
-| Embedding Model | `paraphrase-multilingual-MiniLM-L12-v2` (sentence-transformers) |
-| Vector Search | FAISS `IndexFlatIP` |
-| Database | SQLite via SQLAlchemy (swap to Postgres with one env var) |
-| Scraper | Playwright (headless Chromium) |
-| Container | Docker + docker-compose |
+*  Semantic material search using FAISS + sentence-transformers
+*  Real-time pricing estimation for materials and labor tasks
+*  Multilingual matching â€” French and English queries work out of the box
+*  Regional price modifiers for 30+ French cities and regions
+*  Contractor feedback loop with time-decay weighting
+*  Persistent pricing logs in SQLite (swappable to Postgres with one env var)
+*  Auto-generated interactive API docs at `/docs`
 
 ---
 
-## Architecture
+##  Why Semantic Search?
+
+Traditional systems rely on keyword matching, which fails when contractors describe materials in natural language.
+
+This system:
+
+* Understands intent (e.g., `"electric water heater 200L"` matches `"chauffe-eau Ã©lectrique 200L vertical"`)
+* Works across languages â€” proposal in English, catalog in French, no preprocessing needed
+* Ranks candidates by cosine similarity so the best match is always at the top
+* Returns up to 3 alternative matches with confidence scores for transparency
+
+---
+
+##  Architecture
 
 ```
-Scraper (Playwright)
-    ¦
-    ?
-Embedder (MiniLM-L12, 384-dim)
-    ¦
-    ?
-FAISS Index (products.index)
-    ¦
-    ?
-FastAPI REST API
-    +-- POST /price   ? Material Pricer (semantic search ? unit price ? modifiers)
-    ¦                 ? Task Pricer    (hourly rate × hours × phase factor)
-    ¦                 ? Modifiers      (regional multiplier + contractor margin)
-    ¦
-    +-- POST /feedback ? Feedback Engine (time-decay weighted adjustment)
-    +-- GET  /search   ? Raw vector search
-    +-- GET  /health   ? Status + index info
-    ¦
-    ?
-SQLite  (products | feedback | pricing_logs)
+User Query â†’ Embedder (MiniLM-L12) â†’ FAISS Index â†’ Best Match â†’ Pricing Engine â†’ API Response
+                                                                      â”‚
+                                                          Regional Modifier Ã— Feedback Î” Ã— Margin
 ```
 
-**Request flow for `POST /price`:**
-1. Each material label is embedded ? FAISS finds closest catalog match
-2. Unit price × quantity ? apply regional modifier ? apply feedback delta ? apply margin
-3. Each task ? `hourly_rate × hours × phase_complexity × regional modifier × margin`
+**Full request flow for `POST /price`:**
+1. Each material label is embedded â†’ FAISS finds closest catalog match
+2. `unit_price Ã— quantity` â†’ regional modifier â†’ feedback delta â†’ contractor margin
+3. Each task â†’ `hourly_rate Ã— hours Ã— phase_complexity Ã— regional modifier Ã— margin`
 4. All line items aggregated into a single total
 
 ---
 
-## API Endpoints
+##  API Endpoints
 
 ### `POST /price`
-Price a full construction proposal (materials + tasks).
 
 **Request:**
 ```json
@@ -85,113 +67,95 @@ Price a full construction proposal (materials + tasks).
 }
 ```
 
-**Response (per material):**
-
-| Field | Meaning |
-|-------|---------|
-| `matched_product` | Catalog product the label was matched to |
-| `confidence_score` | Cosine similarity (0–1) |
-| `base_cost` | `unit_price × quantity × regional_modifier` |
-| `feedback_adjustment` | EUR delta from historical contractor feedback |
-| `with_margin` | Final cost including contractor margin |
-| `alternatives` | Up to 3 other candidate matches |
-
----
-
-### `POST /feedback`
-Submit a price correction for a previously priced item.
-
+**Response:**
 ```json
 {
-  "proposal_id": "test_001",
-  "item_type": "material",
-  "item_label": "Cumulus 200L",
-  "feedback_type": "too_low",
-  "actual_price": 350.00,
-  "comment": "Prices have gone up."
+  "total": 304.05,
+  "materials": [
+    {
+      "label": "Electric water heater 200L",
+      "matched_product": "Chauffe-eau Ã©lectrique 200L",
+      "confidence_score": 0.87,
+      "with_margin": 241.55
+    }
+  ],
+  "tasks": [
+    {
+      "label": "Plumbing installation",
+      "estimated_unit_price": 62.50,
+      "pricing_method": "labor_rate_estimation"
+    }
+  ]
 }
 ```
 
-`feedback_type` accepts: `too_low`, `too_high`, `correct`
-
----
+### `POST /feedback`
+Submit a price correction. Influences future `/price` calls for similar items.
 
 ### `GET /search?q={query}&top_k={k}`
 Raw semantic search against the product catalog.
-
-```bash
-curl "http://localhost:8000/search?q=chauffe-eau+200L&top_k=3"
-```
-
----
 
 ### `GET /health`
 Returns API status, FAISS index state, and product count.
 
 ---
 
-## How to Run
+##  Tech Stack
 
-### Option 1 — One command (recommended)
+| Component | Choice |
+|-----------|--------|
+| Language | Python 3.11+ |
+| Framework | FastAPI |
+| Embedding Model | `paraphrase-multilingual-MiniLM-L12-v2` |
+| Vector Search | FAISS `IndexFlatIP` |
+| Database | SQLite via SQLAlchemy |
+| Scraper | Playwright (headless Chromium) |
+| Container | Docker + docker-compose |
 
-**Windows (PowerShell):**
+---
+
+## â–¶ How to Run
+
+**One command (recommended):**
+
 ```powershell
+# Windows
 .\start.ps1
 ```
 
-**macOS / Linux:**
 ```bash
+# macOS / Linux
 chmod +x start.sh && ./start.sh
 ```
 
-The script handles: venv creation ? dependency install ? FAISS index build ? server start.
-API will be live at **http://localhost:8000** | Docs at **http://localhost:8000/docs**
+Handles venv creation, dependency install, FAISS index build, and server start automatically.
 
----
-
-### Option 2 — Manual steps
+**Or manually:**
 
 ```bash
-# 1. Create and activate virtual environment
-python -m venv .venv
-.venv\Scripts\activate        # Windows
-source .venv/bin/activate     # macOS/Linux
-
-# 2. Install dependencies
+git clone https://github.com/shravan660/construction-pricing-api
+cd construction-pricing-api
+python -m venv .venv && .venv\Scripts\activate   # Windows
 pip install -r requirements.txt
-
-# 3. Build the FAISS index (uses built-in seed data — no scraping needed)
 python scripts/build_index.py --use-seed
-
-# 4. Start the API
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
----
-
-### Option 3 — Docker
-
-```bash
-docker compose up --build
-```
+API live at **http://localhost:8000** | Docs at **http://localhost:8000/docs**
 
 ---
 
-### Run Tests
+## ðŸ”® Future Improvements
 
-```bash
-python scripts/build_index.py --use-seed   # index must exist first
-pytest tests/ -v
-```
+* Add frontend UI for quote submission
+* Integrate real-time market pricing APIs (Batiprix / OPPBTP)
+* Deploy on AWS/GCP with Postgres
+* Add authentication and rate limiting
+* Use FAISS for feedback similarity matching (currently keyword overlap)
+* Incremental FAISS index updates instead of full rebuild on each scrape
 
 ---
 
-## Future Improvements
+##  Resume Highlight
 
-- **Better feedback matching** — use FAISS to find semantically similar feedback entries instead of keyword overlap (would fix the "cumulus" vs "chauffe-eau" blind spot)
-- **Live task rate data** — parse Batiprix PDF or integrate OPPBTP API instead of hardcoded estimates
-- **Incremental FAISS updates** — current setup rebuilds the full index on each scrape run; should support upsert
-- **Authentication** — API key middleware or OAuth2 (currently all endpoints are open)
-- **Confidence threshold flag** — surface a clear `low_confidence: true` flag when match score < 0.5
-- **Postgres migration** — SQLAlchemy ORM is already set up for it; just an env var change away
-- **Test coverage for `/feedback`** — current test suite covers pricing and search but not the feedback endpoint
+Built a construction pricing API using FastAPI and FAISS-based semantic search, improving material matching accuracy over traditional keyword-based systems. Supports multilingual French/English queries, regional cost modifiers, and a time-decay contractor feedback loop.
