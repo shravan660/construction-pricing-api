@@ -154,8 +154,4 @@ API live at **http://localhost:8000** | Docs at **http://localhost:8000/docs**
 * Use FAISS for feedback similarity matching (currently keyword overlap)
 * Incremental FAISS index updates instead of full rebuild on each scrape
 
----
 
-##  Resume Highlight
-
-Built a construction pricing API using FastAPI and FAISS-based semantic search, improving material matching accuracy over traditional keyword-based systems. Supports multilingual French/English queries, regional cost modifiers, and a time-decay contractor feedback loop.
