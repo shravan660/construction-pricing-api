@@ -1,62 +1,62 @@
-﻿# 🚧 Construction Pricing API
+# Construction Pricing API
 
-## 🚨 Problem Statement
+## Problem Statement
 
-Construction companies receive quotes in natural language — contractors write things like "electric water heater 200L" or "chauffe-eau 200L". Traditional keyword search fails to match these against product catalogs accurately, causing wrong pricing or manual lookup overhead.
+Construction companies receive quotes in natural language  contractors write things like "electric water heater 200L" or "chauffe-eau 200L". Traditional keyword search fails to match these against product catalogs accurately, causing wrong pricing or manual lookup overhead.
 
 This API solves that by using semantic search to find the closest matching product regardless of exact wording or language.
 
 ---
 
-## 🚀 Overview
+## Overview
 
 A FastAPI-based backend that estimates construction material and labor pricing using **semantic search**.
 Matches free-text material descriptions to real French catalog products, handles French + English queries, applies regional cost modifiers, and learns from contractor feedback via a time-decay correction loop.
 
 ---
 
-## 💡 Key Features
+## Key Features
 
-* 🔍 Semantic material search using FAISS + sentence-transformers
-* ⚡ Real-time pricing estimation for materials and labor tasks
-* 🧠 Multilingual matching — French and English queries work out of the box
-* 🗺️ Regional price modifiers for 30+ French cities and regions
-* 🔄 Contractor feedback loop with time-decay weighting
-* 📦 Persistent pricing logs in SQLite (swappable to Postgres with one env var)
-* 📖 Auto-generated interactive API docs at `/docs`
+* Semantic material search using FAISS + sentence-transformers
+* Real-time pricing estimation for materials and labor tasks
+* Multilingual matching  French and English queries work out of the box
+* Regional price modifiers for 30+ French cities and regions
+* Contractor feedback loop with time-decay weighting
+* Persistent pricing logs in SQLite (swappable to Postgres with one env var)
+* Auto-generated interactive API docs at `/docs`
 
 ---
 
-## 🧠 Why Semantic Search?
+## Why Semantic Search?
 
 Traditional systems rely on keyword matching, which fails when contractors describe materials in natural language.
 
 This system:
 
-* Understands intent — `"electric water heater 200L"` matches `"chauffe-eau électrique 200L vertical"`
-* Works across languages — proposal in English, catalog in French, no preprocessing needed
+* Understands intent  `"electric water heater 200L"` matches `"chauffe-eau lectrique 200L vertical"`
+* Works across languages  proposal in English, catalog in French, no preprocessing needed
 * Ranks candidates by cosine similarity so the best match is always at the top
 * Returns up to 3 alternative matches with confidence scores for transparency
 
 ---
 
-## ⚙️ Architecture
+## Architecture
 
 ```
-User Query → Embedder (MiniLM-L12) → FAISS Index → Best Match → Pricing Engine → API Response
+User Query  Embedder (MiniLM-L12)  FAISS Index  Best Match  Pricing Engine  API Response
                                                                        |
                                                            Regional Modifier x Feedback Delta x Margin
 ```
 
 **Full request flow for `POST /price`:**
-1. Each material label is embedded → FAISS finds closest catalog match
-2. `unit_price x quantity` → regional modifier → feedback delta → contractor margin
-3. Each task → `hourly_rate x hours x phase_complexity x regional modifier x margin`
+1. Each material label is embedded  FAISS finds closest catalog match
+2. `unit_price x quantity`  regional modifier  feedback delta  contractor margin
+3. Each task  `hourly_rate x hours x phase_complexity x regional modifier x margin`
 4. All line items aggregated into a single total
 
 ---
 
-## 📡 API Example
+## API Example
 
 ### `POST /price`
 
@@ -82,7 +82,7 @@ User Query → Embedder (MiniLM-L12) → FAISS Index → Best Match → Pricing 
   "materials": [
     {
       "label": "Electric water heater 200L",
-      "matched_product": "Chauffe-eau électrique 200L",
+      "matched_product": "Chauffe-eau lectrique 200L",
       "confidence_score": 0.87,
       "with_margin": 241.55
     }
@@ -108,7 +108,7 @@ Returns API status, FAISS index state, and product count.
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component | Choice |
 |-----------|--------|
@@ -122,7 +122,7 @@ Returns API status, FAISS index state, and product count.
 
 ---
 
-## ▶️ How to Run
+## How to Run
 
 **One command (recommended):**
 
@@ -153,7 +153,7 @@ API live at **http://localhost:8000** | Docs at **http://localhost:8000/docs**
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
 * Add frontend UI for quote submission
 * Integrate real-time market pricing APIs (Batiprix / OPPBTP)
